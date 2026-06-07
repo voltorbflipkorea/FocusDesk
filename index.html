@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOCUS DESK · 집중하고 보상받기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Space+Mono:wght@400;700&family=Gowun+Dodum&family=Lexend:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241a13;
+    --paper:#f4ead7;
+    --paper-2:#ece0c8;
+    --amber:#e0902f;
+    --amber-deep:#c2701a;
+    --green:#5c7a4a;
+    --rust:#b34a2e;
+    --line:#cbb792;
+    --shadow:rgba(40,28,16,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Gowun Dodum',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fff6e3 0%, transparent 60%),
+      radial-gradient(900px 700px at 110% 110%, #e6d4ad 0%, transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    min-height:100%;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;opacity:.6;
+  }
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:28px 20px 80px}
+
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+  .brand{font-family:'Gowun Batang',serif;font-weight:700;font-size:26px;letter-spacing:1px}
+  .brand .dot{color:var(--amber-deep)}
+  .tag{font-family:'Space Mono',monospace;font-size:12px;color:#8a755a;letter-spacing:1px}
+
+  .points-pill{
+    font-family:'Space Mono',monospace;font-weight:700;
+    background:var(--ink);color:var(--paper);
+    padding:10px 16px;border-radius:40px;font-size:15px;
+    display:flex;align-items:center;gap:8px;box-shadow:0 6px 0 var(--shadow);
+  }
+  .points-pill .coin{width:16px;height:16px;border-radius:50%;background:var(--amber);box-shadow:inset 0 0 0 2px var(--amber-deep)}
+
+  /* timer card */
+  .card{
+    background:var(--paper-2);
+    border:2px solid var(--ink);
+    border-radius:22px;
+    box-shadow:8px 8px 0 var(--shadow);
+    padding:30px 26px;margin-top:22px;
+  }
+  .mode-row{display:flex;gap:10px;justify-content:center;margin-bottom:22px}
+  .mode-chip{
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;
+    padding:7px 14px;border-radius:30px;border:1.5px solid var(--line);
+    color:#8a755a;cursor:default;background:transparent;
+  }
+  .mode-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .mode-chip.active.break{background:var(--green);border-color:var(--green)}
+
+  .dial{position:relative;width:min(300px,78vw,62vh);aspect-ratio:1;margin:0 auto}
+  .dial svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+  .dial .center{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+  }
+  .time{font-family:'Lexend',sans-serif;font-weight:600;font-size:clamp(38px,11vw,62px);line-height:1;letter-spacing:2px;font-variant-numeric:tabular-nums}
+  .phase{font-family:'Gowun Batang',serif;margin-top:8px;font-size:16px;color:#7a6448}
+  .cyclelbl{font-family:'Space Mono',monospace;font-size:11px;color:#9a8467;margin-top:6px;letter-spacing:1px}
+
+  .controls{display:flex;gap:12px;justify-content:center;margin-top:26px;flex-wrap:wrap}
+  button{font-family:'Gowun Dodum',sans-serif;cursor:pointer;border:none}
+  .btn{
+    padding:13px 26px;border-radius:14px;font-size:16px;font-weight:700;
+    border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+    box-shadow:0 5px 0 var(--shadow);transition:transform .06s, box-shadow .06s;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--shadow)}
+  .btn.primary{background:var(--amber);}
+  .btn.ghost{background:transparent;box-shadow:none;border-color:var(--line);color:#7a6448;font-weight:400}
+
+  /* choice banner after focus */
+  .choice{
+    margin-top:20px;border:2px dashed var(--amber-deep);border-radius:16px;
+    padding:18px;text-align:center;background:rgba(224,144,47,.1);display:none;
+  }
+  .choice.show{display:block;animation:pop .3s ease}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .choice h3{font-family:'Gowun Batang',serif;font-size:18px;margin-bottom:6px}
+  .choice p{font-size:13px;color:#7a6448;margin-bottom:14px}
+  .choice .controls{margin-top:0}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+  .stat{background:var(--paper-2);border:1.5px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center}
+  .stat .num{font-family:'Space Mono',monospace;font-weight:700;font-size:24px}
+  .stat .lbl{font-size:11px;color:#8a755a;margin-top:4px}
+  @media(max-width:560px){
+    .wrap{padding:20px 14px 64px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .card{padding:24px 18px}
+    .brand{font-size:23px}
+  }
+  /* mobile landscape: height is the constraint, so keep things compact */
+  @media (max-height:520px) and (orientation:landscape){
+    .wrap{padding:14px 20px 40px}
+    .card{padding:16px 18px;margin-top:14px}
+    .mode-row{margin-bottom:14px}
+    .controls{margin-top:18px}
+    .phase{margin-top:4px}
+    .sec-title{margin:22px 0 10px}
+  }
+
+  /* sections */
+  .sec-title{font-family:'Gowun Batang',serif;font-weight:700;font-size:20px;margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  .sec-title::after{content:"";flex:1;height:2px;background:var(--line)}
+
+  .shop{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media(max-width:560px){.shop{grid-template-columns:1fr}}
+  .item{
+    background:var(--paper-2);border:2px solid var(--ink);border-radius:16px;
+    padding:16px;box-shadow:4px 4px 0 var(--shadow);display:flex;flex-direction:column;gap:10px;position:relative;
+  }
+  .item .emoji{font-size:34px}
+  .item .name{font-family:'Gowun Batang',serif;font-weight:700;font-size:16px}
+  .item .desc{font-size:12px;color:#7a6448;flex:1}
+  .item .buyrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .price{font-family:'Space Mono',monospace;font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
+  .price .coin{width:13px;height:13px;border-radius:50%;background:var(--amber);box-shadow:inset 0 0 0 2px var(--amber-deep)}
+  .buy{padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;background:var(--green);color:#fff;box-shadow:0 4px 0 var(--shadow)}
+  .buy:disabled{background:#b3a98f;box-shadow:none;cursor:not-allowed}
+  .buy:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--shadow)}
+  .del{position:absolute;top:8px;right:10px;background:transparent;color:#b3a98f;font-size:16px;line-height:1}
+  .del:hover{color:var(--rust)}
+
+  .additem{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .additem input{font-family:'Gowun Dodum',sans-serif;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper);font-size:14px}
+  .additem input.name-in{flex:1;min-width:120px}
+  .additem input.price-in{width:90px}
+
+  .log{font-family:'Space Mono',monospace;font-size:12px;color:#7a6448;line-height:1.9;max-height:160px;overflow:auto;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--paper-2)}
+  .log .empty{color:#a89372}
+
+  /* settings */
+  .settings{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;color:#8a755a}
+  .field input{width:90px;font-family:'Space Mono',monospace;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper);font-size:15px}
+
+  footer{text-align:center;margin-top:40px;font-family:'Space Mono',monospace;font-size:11px;color:#a89372;letter-spacing:1px}
+
+  /* toast */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120%);
+    background:var(--ink);color:var(--paper);padding:13px 22px;border-radius:30px;
+    font-size:14px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.2,1.3,.4,1)}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">FOCUS<span class="dot">·</span>DESK</div>
+      <div class="tag">50 MIN FOCUS / 10 MIN BREAK · 보상으로 바꾸는 집중</div>
+    </div>
+    <div class="points-pill"><span class="coin"></span><span id="pointDisplay">0</span> P</div>
+  </header>
+
+  <!-- TIMER -->
+  <section class="card">
+    <div class="mode-row">
+      <span class="mode-chip active" id="chipFocus">FOCUS</span>
+      <span class="mode-chip break" id="chipBreak">BREAK</span>
+    </div>
+
+    <div class="dial">
+      <svg width="300" height="300" viewBox="0 0 300 300">
+        <circle cx="150" cy="150" r="135" fill="none" stroke="#cbb792" stroke-width="14"/>
+        <circle id="ring" cx="150" cy="150" r="135" fill="none" stroke="#e0902f" stroke-width="14"
+                stroke-linecap="round" stroke-dasharray="848" stroke-dashoffset="0"/>
+      </svg>
+      <div class="center">
+        <div class="time" id="timeText">50:00</div>
+        <div class="phase" id="phaseText">집중할 시간</div>
+        <div class="cyclelbl" id="cycleText">CYCLE 1</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn primary" id="startBtn">시작</button>
+      <button class="btn" id="resetBtn">리셋</button>
+      <button class="btn ghost" id="skipBtn">건너뛰기</button>
+    </div>
+
+    <!-- choice after a focus block -->
+    <div class="choice" id="choiceBox">
+      <h3 id="choiceTitle">🎉 50분 집중 완료!</h3>
+      <p>이제 보상을 선택하세요. 쉬어가거나, 포인트를 모으거나.</p>
+      <div class="controls">
+        <button class="btn" id="takeBreak">10분 휴식하기</button>
+        <button class="btn primary" id="takePoints">10 포인트 받기 💰</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="num" id="stToday">0</div><div class="lbl">오늘 집중</div></div>
+    <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">누적 집중</div></div>
+    <div class="stat"><div class="num" id="stHours">0.0</div><div class="lbl">총 집중시간(h)</div></div>
+    <div class="stat"><div class="num" id="stStreak">0</div><div class="lbl">연속 일수 🔥</div></div>
+  </div>
+
+  <!-- SHOP -->
+  <h2 class="sec-title">🛒 보상 상점</h2>
+  <div class="shop" id="shopGrid"></div>
+  <div class="additem">
+    <input class="name-in" id="newName" placeholder="보상 이름 (예: 좋아하는 음료)" />
+    <input class="name-in" id="newDesc" placeholder="설명 (선택)" />
+    <input class="price-in" id="newPrice" type="number" min="1" placeholder="가격" />
+    <button class="btn primary" id="addItemBtn" style="padding:10px 18px;font-size:14px">추가</button>
+  </div>
+
+  <!-- HISTORY -->
+  <h2 class="sec-title">📜 기록</h2>
+  <div class="log" id="logBox"><span class="empty">아직 기록이 없어요. 첫 집중을 시작해보세요.</span></div>
+
+  <!-- SETTINGS -->
+  <h2 class="sec-title">⚙️ 설정</h2>
+  <div class="card" style="box-shadow:4px 4px 0 var(--shadow)">
+    <div class="settings">
+      <div class="field"><label>집중 시간 (분)</label><input type="number" id="setFocus" min="1" value="50"></div>
+      <div class="field"><label>휴식 시간 (분)</label><input type="number" id="setBreak" min="1" value="10"></div>
+      <div class="field"><label>완료 시 포인트</label><input type="number" id="setReward" min="1" value="10"></div>
+      <button class="btn" id="saveSettings">저장</button>
+    </div>
+    <div class="settings" style="margin-top:16px;border-top:1.5px solid var(--line);padding-top:16px">
+      <button class="btn ghost" id="resetPoints">포인트 초기화</button>
+      <button class="btn ghost" id="resetLog">기록 초기화</button>
+      <button class="btn ghost" id="resetShop">상점 초기화</button>
+      <button class="btn ghost" id="resetAll">전체 초기화</button>
+    </div>
+  </div>
+
+  <footer>FOCUS DESK · 데이터는 이 브라우저에만 저장됩니다</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const RING_LEN = 848; // 2*pi*135
+
+// ---------- state ----------
+const DEFAULT_SHOP = [
+  {id:'s1', name:'초콜릿 한 조각', desc:'당 충전, 5분의 행복', price:10},
+  {id:'s2', name:'커피 한 잔', desc:'카페인으로 리부트', price:15},
+  {id:'s3', name:'게임 20분', desc:'스스로에게 허락하는 휴식', price:30},
+  {id:'s4', name:'영상 1편', desc:'유튜브/넷플릭스 1편', price:25},
+  {id:'s5', name:'낮잠 30분', desc:'죄책감 없는 회복', price:40},
+  {id:'s6', name:'야식 찬스', desc:'오늘은 먹어도 됨', price:60},
+];
+
+let state = {
+  points:0, today:0, total:0, totalSec:0,
+  streak:0, lastDay:null, cycle:1,
+  settings:{focus:50, break:10, reward:10},
+  shop:[...DEFAULT_SHOP],
+  log:[]
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem('focusdesk');
+    if(raw){ state = Object.assign(state, JSON.parse(raw)); }
+  }catch(e){}
+  // streak rollover check
+  const today = new Date().toDateString();
+  if(state.lastDay && state.lastDay !== today){
+    const diff = (new Date(today) - new Date(state.lastDay))/86400000;
+    if(diff > 1) state.streak = 0;       // 하루라도 거르면 끊김
+    state.today = 0;                     // 새 날 오늘 카운트 리셋
+  }
+}
+function save(){ try{ localStorage.setItem('focusdesk', JSON.stringify(state)); }catch(e){} }
+
+// ---------- timer ----------
+let mode='focus';            // 'focus' | 'break'
+let remaining = state.settings.focus*60;
+let totalForMode = remaining;
+let ticking=null;
+let running=false;
+
+function fmt(s){const m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
+
+function renderTimer(){
+  $('timeText').textContent = fmt(remaining);
+  const frac = totalForMode? remaining/totalForMode : 0;
+  $('ring').style.strokeDashoffset = RING_LEN*(1-frac);
+  $('ring').style.stroke = mode==='focus'? 'var(--amber)':'var(--green)';
+  $('phaseText').textContent = mode==='focus'? '집중할 시간' : '잠깐 쉬어가요';
+  $('cycleText').textContent = 'CYCLE '+state.cycle;
+  $('chipFocus').classList.toggle('active', mode==='focus');
+  $('chipBreak').classList.toggle('active', mode==='break');
+  $('startBtn').textContent = running? '일시정지' : '시작';
+}
+
+let sessionSnap = null; // settings captured when a focus block completes
+
+function setMode(m, minOverride){
+  mode=m;
+  const mins = (minOverride!=null) ? minOverride : (m==='focus'? state.settings.focus : state.settings.break);
+  totalForMode = mins*60;
+  remaining = totalForMode;
+  renderTimer();
+}
+
+function tick(){
+  remaining--;
+  if(mode==='focus') { state.totalSec++; } // count actual focus seconds
+  if(remaining<=0){
+    stop();
+    onPhaseDone();
+  }
+  renderTimer();
+  if(remaining%5===0) save();
+}
+
+function start(){
+  if(running){ stop(); renderTimer(); return; }
+  if($('choiceBox').classList.contains('show')) return; // must choose first
+  running=true; ticking=setInterval(tick,1000); renderTimer();
+}
+function stop(){ running=false; clearInterval(ticking); }
+
+function onPhaseDone(){
+  ping();
+  if(mode==='focus'){
+    // log + stats
+    state.today++; state.total++;
+    const today = new Date().toDateString();
+    if(state.lastDay !== today){ state.streak++; state.lastDay = today; }
+    addLog('✅ '+state.settings.focus+'분 집중 완료');
+    save(); renderStats();
+    // freeze the values for THIS completed session; later settings changes won't affect it
+    sessionSnap = {focus:state.settings.focus, break:state.settings.break, reward:state.settings.reward};
+    $('choiceTitle').textContent = '🎉 '+sessionSnap.focus+'분 집중 완료!';
+    $('takeBreak').textContent = sessionSnap.break+'분 휴식하기';
+    $('takePoints').textContent = sessionSnap.reward+' 포인트 받기 💰';
+    $('choiceBox').classList.add('show');   // ask reward choice
+  }else{
+    addLog('☕ 휴식 끝 — 다음 사이클로');
+    state.cycle++;
+    setMode('focus'); save(); renderTimer();
+    toast('휴식 끝! 다시 집중해볼까요?');
+  }
+}
+
+// reward choice — uses the snapshot from the completed session, not live settings
+$('takeBreak').onclick = ()=>{
+  const br = sessionSnap ? sessionSnap.break : state.settings.break;
+  $('choiceBox').classList.remove('show');
+  sessionSnap = null;
+  setMode('break', br); start();
+  toast(br+'분 휴식 시작 ☕');
+};
+$('takePoints').onclick = ()=>{
+  const r = sessionSnap ? sessionSnap.reward : state.settings.reward;
+  $('choiceBox').classList.remove('show');
+  sessionSnap = null;
+  state.points += r;
+  addLog('💰 +'+r+'P (휴식 대신 포인트)');
+  state.cycle++;
+  renderPoints(); renderShop(); save();
+  setMode('focus'); renderTimer();
+  toast('+'+r+' 포인트 적립! 바로 다음 집중 가능');
+};
+
+// ---------- controls ----------
+$('startBtn').onclick = start;
+$('resetBtn').onclick = ()=>{ stop(); setMode(mode); $('choiceBox').classList.remove('show'); };
+$('skipBtn').onclick = ()=>{ stop(); remaining=1; tick(); };
+
+// ---------- points / stats ----------
+function renderPoints(){ $('pointDisplay').textContent = state.points; }
+function updateChoiceLabels(){
+  $('choiceTitle').textContent = '🎉 '+state.settings.focus+'분 집중 완료!';
+  $('takeBreak').textContent = state.settings.break+'분 휴식하기';
+  $('takePoints').textContent = state.settings.reward+' 포인트 받기 💰';
+}
+function renderStats(){
+  $('stToday').textContent = state.today;
+  $('stTotal').textContent = state.total;
+  $('stHours').textContent = (state.totalSec/3600).toFixed(1);
+  $('stStreak').textContent = state.streak;
+}
+
+// ---------- shop ----------
+function renderShop(){
+  const g=$('shopGrid'); g.innerHTML='';
+  state.shop.forEach(item=>{
+    const afford = state.points >= item.price;
+    const el=document.createElement('div'); el.className='item';
+    el.innerHTML = `
+      <button class="del" title="삭제" data-id="${item.id}">✕</button>
+      <div class="name">${esc(item.name)}</div>
+      <div class="desc">${esc(item.desc||'')}</div>
+      <div class="buyrow">
+        <span class="price"><span class="coin"></span>${item.price} P</span>
+        <button class="buy" data-buy="${item.id}" ${afford?'':'disabled'}>${afford?'구매':'포인트 부족'}</button>
+      </div>`;
+    g.appendChild(el);
+  });
+  g.querySelectorAll('[data-buy]').forEach(b=> b.onclick=()=>buy(b.dataset.buy));
+  g.querySelectorAll('.del').forEach(b=> b.onclick=()=>{ state.shop=state.shop.filter(s=>s.id!==b.dataset.id); save(); renderShop(); });
+}
+function buy(id){
+  const item=state.shop.find(s=>s.id===id); if(!item) return;
+  if(state.points < item.price){ toast('포인트가 부족해요'); return; }
+  state.points -= item.price;
+  addLog('🛒 '+item.name+' 구매 (-'+item.price+'P)');
+  renderPoints(); renderShop(); save();
+  toast(item.name+' 구매 완료! 즐기세요 🎉');
+}
+$('addItemBtn').onclick = ()=>{
+  const name=$('newName').value.trim();
+  const desc=$('newDesc').value.trim();
+  const price=parseInt($('newPrice').value);
+  if(!name||!price||price<1){ toast('이름과 가격을 입력하세요'); return; }
+  state.shop.push({id:'c'+Date.now(), name, desc, price});
+  $('newName').value='';$('newDesc').value='';$('newPrice').value='';
+  save(); renderShop(); toast('보상 추가됨!');
+};
+
+// ---------- log ----------
+function addLog(text){
+  const t=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  state.log.unshift('['+t+'] '+text);
+  state.log = state.log.slice(0,40);
+  renderLog();
+}
+function renderLog(){
+  const b=$('logBox');
+  if(!state.log.length){ b.innerHTML='<span class="empty">아직 기록이 없어요. 첫 집중을 시작해보세요.</span>'; return; }
+  b.innerHTML = state.log.map(l=>esc(l)).join('<br>');
+}
+
+// ---------- settings ----------
+$('saveSettings').onclick = ()=>{
+  const f=parseInt($('setFocus').value), br=parseInt($('setBreak').value), r=parseInt($('setReward').value);
+  if(f<1||br<1||r<1){ toast('1 이상의 값을 입력하세요'); return; }
+  state.settings={focus:f, break:br, reward:r};
+  if(!running){ setMode(mode); }
+  if(!sessionSnap){ updateChoiceLabels(); } // don't disturb a banner that's already showing
+  save(); toast('설정 저장됨 · 다음 사이클부터 적용'); 
+};
+$('resetPoints').onclick = ()=>{
+  if(!confirm('포인트를 0으로 초기화할까요?')) return;
+  state.points = 0; save(); renderPoints(); renderShop(); toast('포인트 초기화됨');
+};
+$('resetLog').onclick = ()=>{
+  if(!confirm('기록을 모두 지울까요?')) return;
+  state.log = []; save(); renderLog(); toast('기록 초기화됨');
+};
+$('resetShop').onclick = ()=>{
+  if(!confirm('상점을 기본 보상 목록으로 되돌릴까요? (직접 추가한 보상은 사라져요)')) return;
+  state.shop = DEFAULT_SHOP.map(x=>({...x})); save(); renderShop(); toast('상점 초기화됨');
+};
+$('resetAll').onclick = ()=>{
+  if(!confirm('포인트·기록·상점·통계를 모두 초기화할까요?')) return;
+  localStorage.removeItem('focusdesk'); location.reload();
+};
+
+// ---------- helpers ----------
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+let audioCtx;
+function ping(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.18,0.36].forEach((d,i)=>{
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.frequency.value=[660,880,990][i]; o.type='sine';
+      o.connect(g); g.connect(audioCtx.destination);
+      const t=audioCtx.currentTime+d;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,t+.25);
+      o.start(t); o.stop(t+.26);
+    });
+  }catch(e){}
+}
+
+// ---------- init ----------
+load();
+$('setFocus').value=state.settings.focus;
+$('setBreak').value=state.settings.break;
+$('setReward').value=state.settings.reward;
+setMode('focus');
+updateChoiceLabels();
+renderPoints(); renderStats(); renderShop(); renderLog();
+
+// warn on leaving mid-session
+window.addEventListener('beforeunload', e=>{ if(running){ e.preventDefault(); e.returnValue=''; } });
+</script>
+</body>
+</html>
